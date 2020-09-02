@@ -13,7 +13,8 @@ class Client {
     
     static let APIKey = "6705fd435352f4a72b472fd31a25ebeb"
     static let APISecret = "1b7cfa436e8e7d25"
-    static let numberOfImagesReturnedPerPage = 10
+    static let numberOfImagesReturnedPerPage = 50
+    static var imageDownloadCount = 0
     
     enum Endpoints {
         static let base = "https://www.flickr.com/services/rest/?method=flickr.photos.search"
@@ -28,7 +29,7 @@ class Client {
         var stringValue: String {
             switch self {
             case .search(let lat, let lon):
-                return Endpoints.base + Endpoints.api_key + "&lat=\(lat)&lon=\(lon)" + Endpoints.numberPerPage + Endpoints.format
+                return Endpoints.base + Endpoints.api_key + "&lat=\(lat)&lon=\(lon)" + Endpoints.numberPerPage + Endpoints.format + "&page=\(Int.random(in: 1..<10))"
             case .fetchImage(let farmId, let serverId,let id,let secret):
                 return "https://farm\(farmId)" + Endpoints.base2 + "\(serverId)/\(id)_\(secret).jpg"
             }
@@ -55,22 +56,29 @@ class Client {
         task.resume()
     }
     
-    class func downloadPictures(farmId: Int,serverId: String,id: String,secret: String, completion: @escaping (Error?,Data?) -> Void) {
-        taskForGetRequest(url: Endpoints.fetchImage(farmId, serverId, id, secret).url) { (error, data) in
+    class func downloadPhotoImage(photoUrl: URL, completion: @escaping (Error?,Data?,Int) -> Void) {
+        taskForGetRequest(url: photoUrl) { (error, data) in
            if error != nil {
                 DispatchQueue.main.async {
-                    completion(error,nil)
+                    completion(error,nil,imageDownloadCount)
                 }
                 return
             }
+            imageDownloadCount += 1
+            guard let data = data else { return }
             DispatchQueue.main.async {
-                completion(nil,data)
+                completion(nil,data,imageDownloadCount)
             }
         }
     }
     
-    class func getPictureDetails(lat: Double,lon: Double, completion: @escaping (Error?,Data?) -> Void) {
+    class func getPhotoUrl(photo: Photo) -> URL {
+        return Endpoints.fetchImage(photo.farm, photo.server, photo.id, photo.secret).url
+    }
+    
+    class func getPictureDetails(lat: Double,lon: Double, completion: @escaping (Error?,[Photo]?) -> Void) {
         taskForGetRequest(url: Endpoints.search(lat, lon).url) { (error, data) in
+            print("URL STRING: --> \(Endpoints.search(lat, lon).stringValue)")
             if error != nil {
                 DispatchQueue.main.async {
                     completion(error,nil)
@@ -78,24 +86,10 @@ class Client {
                 return
             }
             do {
-                let detailsData = try JSONDecoder().decode(PhotoDetails.self, from: data!)
-                var images: [Data] = []
-                for n in 0..<numberOfImagesReturnedPerPage {
-                    downloadPictures(farmId: detailsData.photos.photo[n].farm, serverId: detailsData.photos.photo[n].server, id: detailsData.photos.photo[n].id, secret: detailsData.photos.photo[n].secret) { (error, data) in
-                        if error != nil {
-                            DispatchQueue.main.async {
-                                print("Something went wrong")
-                                completion(error,nil)
-                            }
-                            return
-                        }
-                        if let data = data {
-                            //images.append(data)
-                            DispatchQueue.main.async {
-                                               completion(nil,data)
-                                           }
-                        }
-                    }
+                let responseObject = try JSONDecoder().decode(PhotoDetails.self, from: data!)
+                let images: [Photo] = responseObject.photos.photo
+                DispatchQueue.main.async {
+                    completion(nil,images)
                 }
             }catch {
                 DispatchQueue.main.async {

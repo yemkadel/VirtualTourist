@@ -41,10 +41,10 @@ class TravelLocationsMapView: UIViewController, MKMapViewDelegate, NSFetchedResu
         if sender.state == .began {
             let locationInView = sender.location(in: map)
             let locationOnMap = map.convert(locationInView, toCoordinateFrom: map)
-            let newPin = Location(context: dataController.viewContext)
-            newPin.latitude = locationOnMap.latitude
-            newPin.longitude = locationOnMap.longitude
-            newPin.creationDate = Date()
+            let newLocation = Location(context: dataController.viewContext)
+            newLocation.latitude = locationOnMap.latitude
+            newLocation.longitude = locationOnMap.longitude
+            newLocation.creationDate = Date()
             try? dataController.viewContext.save()
             setUpFetchedResultController()
             addAnnotations()
@@ -66,15 +66,35 @@ class TravelLocationsMapView: UIViewController, MKMapViewDelegate, NSFetchedResu
         }
     }
     
+    func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+        var pinView = mapView.dequeueReusableAnnotationView(withIdentifier: "pinView") as? MKPinAnnotationView
+        
+        if pinView == nil {
+            pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: "pinView")
+            pinView?.pinTintColor = .blue
+            pinView?.canShowCallout = true
+            pinView?.rightCalloutAccessoryView = UIButton(type: .detailDisclosure)
+        } else {
+            pinView?.annotation = annotation
+        }
+        return pinView
+    }
+    
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
         let photoLibraryVC = storyboard?.instantiateViewController(identifier: "PhotoAlbumViewController") as! PhotoAlbumViewController
         photoLibraryVC.dataController = dataController
-        photoLibraryVC.latitude = view.annotation?.coordinate.latitude ?? 0.0
-        photoLibraryVC.longitude = view.annotation?.coordinate.longitude ?? 0.0
-        print("lat: \(photoLibraryVC.latitude ?? 0 )")
-        print("lon: \(photoLibraryVC.longitude ?? 0)")
-        present(photoLibraryVC, animated: true, completion: nil)
-        
+        for mapLocation in locations {
+            let locationLatitude = CLLocationDegrees((mapLocation.value(forKey: "latitude") as? Double) ?? 0.0)
+            let locationLongitude = CLLocationDegrees((mapLocation.value(forKey: "longitude") as? Double) ?? 0.0)
+            let annotationLatitude = view.annotation?.coordinate.latitude
+            let annotationLongitude = view.annotation?.coordinate.longitude
+            
+            if locationLatitude == annotationLatitude, locationLongitude == annotationLongitude {
+                photoLibraryVC.location = mapLocation
+            }
+        }
+        navigationController?.pushViewController(photoLibraryVC, animated: true)
+        //present(photoLibraryVC, animated: true, completion: nil)
     }
     
 
