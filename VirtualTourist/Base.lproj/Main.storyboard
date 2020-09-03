@@ -121,7 +121,6 @@
                         <viewLayoutGuide key="safeArea" id="E3w-qk-Mnx"/>
                     </view>
                     <connections>
-                        <outlet property="flowLayout" destination="KtQ-Or-oCE" id="guB-Vf-TWb"/>
                         <outlet property="map" destination="bT7-7c-Mxb" id="SgL-bZ-V6f"/>
                         <outlet property="newCollectionButton" destination="1CG-T1-dnP" id="WIe-aU-8Xk"/>
                         <outlet property="pictureCell" destination="NdO-xp-pmq" id="IJx-4g-K3H"/>

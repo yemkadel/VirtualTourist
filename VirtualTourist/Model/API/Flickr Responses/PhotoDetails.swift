@@ -23,7 +23,7 @@ struct PhotoDetailsResponse: Codable {
     let pages: Int
     let perPage: Int
     let total: String
-    let photo: [Photo]
+    let photo: [Foto]
     
     enum CodingKeys: String,CodingKey {
         case page
@@ -34,7 +34,7 @@ struct PhotoDetailsResponse: Codable {
     }
 }
 
-struct Photo: Codable {
+struct Foto: Codable {
     let id: String
     let owner: String
     let secret: String

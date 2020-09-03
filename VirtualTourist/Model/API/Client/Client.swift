@@ -72,11 +72,11 @@ class Client {
         }
     }
     
-    class func getPhotoUrl(photo: Photo) -> URL {
+    class func getPhotoUrl(photo: Foto) -> URL {
         return Endpoints.fetchImage(photo.farm, photo.server, photo.id, photo.secret).url
     }
     
-    class func getPictureDetails(lat: Double,lon: Double, completion: @escaping (Error?,[Photo]?) -> Void) {
+    class func getPictureDetails(lat: Double,lon: Double, completion: @escaping (Error?,[Foto]?) -> Void) {
         taskForGetRequest(url: Endpoints.search(lat, lon).url) { (error, data) in
             print("URL STRING: --> \(Endpoints.search(lat, lon).stringValue)")
             if error != nil {
@@ -87,7 +87,7 @@ class Client {
             }
             do {
                 let responseObject = try JSONDecoder().decode(PhotoDetails.self, from: data!)
-                let images: [Photo] = responseObject.photos.photo
+                let images: [Foto] = responseObject.photos.photo
                 DispatchQueue.main.async {
                     completion(nil,images)
                 }

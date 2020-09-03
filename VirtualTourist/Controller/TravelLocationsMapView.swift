@@ -13,11 +13,11 @@ import CoreData
 class TravelLocationsMapView: UIViewController, MKMapViewDelegate, NSFetchedResultsControllerDelegate {
     @IBOutlet weak var map: MKMapView!
     var dataController: DataController!
-    var fetchedResultController: NSFetchedResultsController<Location>!
+    var fetchedResultController: NSFetchedResultsController<Pin>!
     var locations: [NSManagedObject] = []
     
     fileprivate func setUpFetchedResultController() {
-        let fetchRequest: NSFetchRequest<Location> = Location.fetchRequest()
+        let fetchRequest: NSFetchRequest<Pin> = Pin.fetchRequest()
         let sortDescriptor = NSSortDescriptor(key: "creationDate", ascending: false)
         fetchRequest.sortDescriptors = [sortDescriptor]
         fetchedResultController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: nil)
@@ -41,7 +41,7 @@ class TravelLocationsMapView: UIViewController, MKMapViewDelegate, NSFetchedResu
         if sender.state == .began {
             let locationInView = sender.location(in: map)
             let locationOnMap = map.convert(locationInView, toCoordinateFrom: map)
-            let newLocation = Location(context: dataController.viewContext)
+            let newLocation = Pin(context: dataController.viewContext)
             newLocation.latitude = locationOnMap.latitude
             newLocation.longitude = locationOnMap.longitude
             newLocation.creationDate = Date()
@@ -71,7 +71,7 @@ class TravelLocationsMapView: UIViewController, MKMapViewDelegate, NSFetchedResu
         
         if pinView == nil {
             pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: "pinView")
-            pinView?.pinTintColor = .blue
+            pinView?.pinTintColor = .brown
             pinView?.canShowCallout = true
             pinView?.rightCalloutAccessoryView = UIButton(type: .detailDisclosure)
         } else {
@@ -81,7 +81,6 @@ class TravelLocationsMapView: UIViewController, MKMapViewDelegate, NSFetchedResu
     }
     
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
-        print("enter 1")
         let photoLibraryVC = storyboard?.instantiateViewController(identifier: "PhotoAlbumViewController") as! PhotoAlbumViewController
         photoLibraryVC.dataController = dataController
         for mapLocation in locations {
@@ -91,12 +90,10 @@ class TravelLocationsMapView: UIViewController, MKMapViewDelegate, NSFetchedResu
             let annotationLongitude = view.annotation?.coordinate.longitude
             
             if locationLatitude == annotationLatitude, locationLongitude == annotationLongitude {
-                photoLibraryVC.location = mapLocation
+                photoLibraryVC.pin = mapLocation
             }
         }
-        print("enter 2")
         navigationController?.pushViewController(photoLibraryVC, animated: true)
-        //present(photoLibraryVC, animated: true, completion: nil)
     }
     
 
