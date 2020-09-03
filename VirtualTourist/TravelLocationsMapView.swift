@@ -81,6 +81,7 @@ class TravelLocationsMapView: UIViewController, MKMapViewDelegate, NSFetchedResu
     }
     
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
+        print("enter 1")
         let photoLibraryVC = storyboard?.instantiateViewController(identifier: "PhotoAlbumViewController") as! PhotoAlbumViewController
         photoLibraryVC.dataController = dataController
         for mapLocation in locations {
@@ -93,6 +94,7 @@ class TravelLocationsMapView: UIViewController, MKMapViewDelegate, NSFetchedResu
                 photoLibraryVC.location = mapLocation
             }
         }
+        print("enter 2")
         navigationController?.pushViewController(photoLibraryVC, animated: true)
         //present(photoLibraryVC, animated: true, completion: nil)
     }

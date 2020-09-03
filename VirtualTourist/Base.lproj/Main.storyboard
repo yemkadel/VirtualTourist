@@ -87,16 +87,17 @@
                                                 <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="t0U-FZ-oaN">
                                                     <rect key="frame" x="0.0" y="0.0" width="168" height="160"/>
                                                 </imageView>
-                                                <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" style="medium" translatesAutoresizingMaskIntoConstraints="NO" id="YO0-Tb-Qwu">
-                                                    <rect key="frame" x="37" y="36" width="20" height="20"/>
-                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                                <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="medium" translatesAutoresizingMaskIntoConstraints="NO" id="YO0-Tb-Qwu">
+                                                    <rect key="frame" x="74" y="70" width="20" height="20"/>
                                                 </activityIndicatorView>
                                             </subviews>
                                             <constraints>
                                                 <constraint firstAttribute="bottom" secondItem="t0U-FZ-oaN" secondAttribute="bottom" id="53J-h8-dt9"/>
                                                 <constraint firstItem="t0U-FZ-oaN" firstAttribute="leading" secondItem="Ykw-wx-736" secondAttribute="leading" id="bkt-bE-YMZ"/>
                                                 <constraint firstAttribute="trailing" secondItem="t0U-FZ-oaN" secondAttribute="trailing" id="jDg-Uz-K7N"/>
+                                                <constraint firstItem="YO0-Tb-Qwu" firstAttribute="centerX" secondItem="Ykw-wx-736" secondAttribute="centerX" id="lWD-8K-cPT"/>
                                                 <constraint firstItem="t0U-FZ-oaN" firstAttribute="top" secondItem="Ykw-wx-736" secondAttribute="top" id="tCh-j3-tkm"/>
+                                                <constraint firstItem="YO0-Tb-Qwu" firstAttribute="centerY" secondItem="Ykw-wx-736" secondAttribute="centerY" id="vWm-nG-fHa"/>
                                             </constraints>
                                         </collectionViewCellContentView>
                                         <size key="customSize" width="168" height="160"/>

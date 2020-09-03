@@ -22,8 +22,8 @@ class PhotoAlbumViewController: UIViewController,UICollectionViewDelegate,UIColl
     var dataController: DataController!
     var location: NSManagedObject!
     var fetchedResultController: NSFetchedResultsController<Image>!
-    var images: [NSManagedObject] = []
-    var photoUrls: [URL] = []
+    var photoObjects: [NSManagedObject] = []
+    var photoImages: [Data] = []
     var imageDisplayCount = 0
     
     func setupCollectionViewLayout() {
@@ -62,7 +62,8 @@ class PhotoAlbumViewController: UIViewController,UICollectionViewDelegate,UIColl
         fetchedResultController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: nil)
         fetchedResultController.delegate = self
         try? fetchedResultController.performFetch()
-        images = fetchedResultController.fetchedObjects ?? []
+        photoObjects = fetchedResultController.fetchedObjects ?? []
+        print("obj count : \(photoObjects.count)")
     }
 
     fileprivate func setUpAnnotationOnMap() {
@@ -100,33 +101,36 @@ class PhotoAlbumViewController: UIViewController,UICollectionViewDelegate,UIColl
             guard let photos = photos else { return }
             for photo in  photos {
                 let photoUrl = Client.getPhotoUrl(photo: photo)
-                self.photoUrls.append(photoUrl)
-                let newImage = Image(context: self.dataController.viewContext)
-                newImage.imageUrl = photoUrl
-                newImage.location = self.location as? Location
-                try? self.dataController.viewContext.save()
+                print("Url: \(photoUrl)")
+                Client.downloadPhotoImage(photoUrl: photoUrl) { (error, data, imageDownloadCount) in
+                    if error != nil {
+                        print("Fatal Error: \(error?.localizedDescription ?? "Something Bad Occurred")")
+                        return
+                    }
+                    guard let data = data else { return }
+                    self.imageDisplayCount = imageDownloadCount
+                    self.photoImages.append(data)
+                    let newImage = Image(context: self.dataController.viewContext)
+                    newImage.imageUrl = photoUrl
+                    newImage.location = self.location as? Location
+                    newImage.imageData = data
+                    try? self.dataController.viewContext.save()
+                    self.setUpFetchedResultController()
+                    self.pictureCell.reloadData()
+                }
             }
-            self.pictureCell.reloadData()
-            self.setUpFetchedResultController()
+           
         }
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-//        let space:CGFloat = 3.0
-//        let widthDimension = (view.frame.size.height - (2 * space)) / 3.0
-//        let heightDimension = (view.frame.size.height - (2 * space)) / 2.0
-//
-//        flowLayout.minimumInteritemSpacing = space
-//        flowLayout.minimumLineSpacing = space
-//        flowLayout.itemSize = CGSize(width: widthDimension, height: widthDimension)
         setupCollectionViewLayout()
-        
         self.newCollectionButton.isEnabled = false
         setUpAnnotationOnMap()
         setUpCollectionView()
         setUpFetchedResultController()
-        if images.isEmpty {
+        if photoObjects.isEmpty {
             fetchImageUrls()
         }
         
@@ -143,6 +147,7 @@ class PhotoAlbumViewController: UIViewController,UICollectionViewDelegate,UIColl
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        print("itemNo : \(fetchedResultController.fetchedObjects?.count)")
         return fetchedResultController.fetchedObjects?.count ?? 0
     }
     
@@ -151,29 +156,21 @@ class PhotoAlbumViewController: UIViewController,UICollectionViewDelegate,UIColl
         cell.photo.image = UIImage(named: "VirtualTourist_76")
         let indicator = cell.activityIndicator
         cell.photo.contentMode = .scaleAspectFill
-        if photoUrls.count != 0 {
-            setUpActivityIndicator(status: true, activityIndicator: indicator!)
-            Client.downloadPhotoImage(photoUrl: photoUrls[indexPath.row]) { (error, data, imageDownloadCount) in
-                if error != nil {
-                    print("Fatal Error: \(error?.localizedDescription ?? "Something Bad Occurred")")
-                    return
-                }
-                guard let data = data else { return }
-                cell.photo.image = UIImage(data: data)
-                cell.photo.contentMode = .scaleAspectFill
-                self.fetchedResultController.object(at: indexPath).imageData = data
-                try? self.dataController.viewContext.save()
-                self.setUpActivityIndicator(status: false, activityIndicator: indicator!)
-                if imageDownloadCount == self.fetchedResultController.fetchedObjects?.count {
+        if photoImages.count != 0 {
+            print("Image Count: \(imageDisplayCount)")
+            let data = photoImages[indexPath.row]
+            cell.photo.image = UIImage(data: data)
+            self.setUpActivityIndicator(status: false, activityIndicator: indicator!)
+            if imageDisplayCount == self.fetchedResultController.fetchedObjects?.count {
                     self.newCollectionButton.isEnabled = true
                 }
-           }
-        } else {
-            if let imageData = fetchedResultController.object(at: indexPath).imageData {
-                cell.photo.image = UIImage(data: imageData)
-                self.setUpActivityIndicator(status: false, activityIndicator: indicator!)
-                self.newCollectionButton.isEnabled = true
-            }
+        }
+        else {
+                if let imageData = fetchedResultController.object(at: indexPath).imageData {
+                    cell.photo.image = UIImage(data: imageData)
+                    self.setUpActivityIndicator(status: false, activityIndicator: indicator!)
+                    self.newCollectionButton.isEnabled = true
+                }
         }
         return cell
     }
@@ -188,7 +185,8 @@ class PhotoAlbumViewController: UIViewController,UICollectionViewDelegate,UIColl
     }
     
     @IBAction func newCollectionPressed(_ sender: UIButton) {
-        photoUrls.removeAll()
+        photoImages.removeAll()
+        Client.imageDownloadCount = 0
         self.newCollectionButton.isEnabled = false
         guard let imageObjects = fetchedResultController.fetchedObjects else { return }
         
@@ -199,7 +197,7 @@ class PhotoAlbumViewController: UIViewController,UICollectionViewDelegate,UIColl
             }
         }
         fetchImageUrls()
-        print("purl is : \(photoUrls.count)")
+        print("purl is : \(photoImages.count)")
         pictureCell.reloadData()
     }
     
