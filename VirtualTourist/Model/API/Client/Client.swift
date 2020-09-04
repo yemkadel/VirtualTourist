@@ -78,7 +78,6 @@ class Client {
     
     class func getPictureDetails(lat: Double,lon: Double, completion: @escaping (Error?,[Foto]?) -> Void) {
         taskForGetRequest(url: Endpoints.search(lat, lon).url) { (error, data) in
-            print("URL STRING: --> \(Endpoints.search(lat, lon).stringValue)")
             if error != nil {
                 DispatchQueue.main.async {
                     completion(error,nil)
